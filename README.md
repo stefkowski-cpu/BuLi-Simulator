@@ -24,9 +24,11 @@ Der Workflow `.github/workflows/pages.yml` prueft die App, baut `dist/` und vero
 ## Aktueller Umfang
 
 - Verein aus Demo-Daten auswaehlen.
-- Dashboard mit Budget, Moral, Fan-Stimmung, Tabellenplatz und naechstem Spiel.
-- Spieltag simulieren.
-- Tabelle und Vereinswerte lokal speichern.
-- PWA-Manifest und Service Worker.
+- Spieltagsuebersicht mit allen Partien des aktuellen Spieltags.
+- Jede Partie einzeln bearbeiten, manuell erfassen oder per Zufallsergebnis vorbereiten.
+- Detailseite je Spiel mit Aufstellungen, Ersatzbank, Wechseln, Toren, Vorlagen, Karten, Minuten und Noten.
+- Kontrolluebersicht vor dem Spieltagsabschluss.
+- Tabelle, Vereinsstatistiken und Spielerstatistiken aus abgeschlossenen Spielen neu berechnen.
+- Lokale Speicherung per IndexedDB, PWA-Manifest und Service Worker.
 
 Die Produktspezifikation liegt in `docs/PRODUCT_SPEC.md`.

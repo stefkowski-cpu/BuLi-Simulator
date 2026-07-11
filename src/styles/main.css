@@ -32,6 +32,28 @@ button {
   padding: 0.85rem 1rem;
 }
 
+.button-link {
+  align-items: center;
+  background: #0f5c3b;
+  border-radius: 8px;
+  color: #ffffff;
+  display: inline-flex;
+  font-weight: 800;
+  justify-content: center;
+  padding: 0.85rem 1rem;
+  text-decoration: none;
+}
+
+.secondary-link,
+.disabled-link {
+  background: #e7dfd2;
+  color: #152018;
+}
+
+.disabled-link {
+  opacity: 0.55;
+}
+
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
@@ -97,6 +119,10 @@ nav a {
   margin-bottom: 1.5rem;
   min-height: 220px;
   padding: clamp(1.25rem, 4vw, 2.5rem);
+}
+
+.compact-head {
+  min-height: 150px;
 }
 
 .hero h1,
@@ -208,6 +234,111 @@ nav a {
   text-align: right;
 }
 
+.match-list {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.match-card {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #ded7ca;
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.match-card h2 {
+  font-size: 1.15rem;
+  margin: 0.1rem 0 0.35rem;
+}
+
+.match-card h2 span {
+  color: #0f5c3b;
+  display: inline-block;
+  font-weight: 900;
+  margin: 0 0.45rem;
+}
+
+.result-editor .form-row,
+.form-row {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+label {
+  color: #334238;
+  display: grid;
+  font-size: 0.85rem;
+  font-weight: 800;
+  gap: 0.35rem;
+}
+
+input,
+select {
+  border: 1px solid #cfc7ba;
+  border-radius: 7px;
+  color: #152018;
+  font: inherit;
+  min-height: 2.6rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.player-list,
+.stat-list {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.stat-list {
+  display: grid;
+  gap: 0.5rem;
+  list-style: none;
+  padding-left: 0;
+}
+
+.stat-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.edit-grid,
+.ratings-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.edit-card {
+  border: 1px solid #ece6dc;
+  border-radius: 8px;
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem;
+}
+
+.ratings-grid {
+  border-top: 1px solid #ece6dc;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.warning-panel {
+  border-color: #b45028;
+  background: #fff6ef;
+}
+
+.ok-panel {
+  border-color: #87b59d;
+  background: #f1faf5;
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -251,5 +382,11 @@ th {
 
   .actions button {
     width: 100%;
+  }
+
+  .match-card,
+  .stat-list li {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

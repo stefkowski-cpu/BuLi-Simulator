@@ -20,9 +20,12 @@ BuLi Simulator ist eine responsive Progressive Web App, in der Nutzer einen deut
 ## Phase 2: Erster spielbarer Teil
 
 - Nutzer waehlt einen Verein.
-- Dashboard zeigt Budget, Moral, Fan-Stimmung, Tabellenplatz und naechstes Spiel.
-- Ein Spieltag kann simuliert werden.
-- Ergebnis, Tabelle und Vereinswerte werden aktualisiert.
+- Der aktuelle Spieltag zeigt alle Einzelspiele.
+- Jedes Spiel hat eine Detailseite mit Ergebnis, Aufstellungen, Bank, Wechseln, Toren, Vorlagen, Karten, Minuten und Noten.
+- Ergebnisse koennen manuell gesetzt oder zufaellig erzeugt werden.
+- Das System erzeugt ein zum Ergebnis passendes Spielschema.
+- Ein Spieltag kann erst nach Ergebnissen fuer alle Partien abgeschlossen werden.
+- Tabelle, Vereinswerte und Spielerstatistiken werden aus abgeschlossenen Spielen berechnet.
 - Spielstand wird lokal gespeichert und kann zurueckgesetzt werden.
 
 ## Spaetere Phasen

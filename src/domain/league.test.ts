@@ -1,22 +1,76 @@
 import { describe, expect, it } from "vitest";
 import { createInitialState } from "../db/gameDb";
-import { buildTable, simulateMatchday } from "./league";
+import {
+  canCompleteCurrentMatchday,
+  completeCurrentMatchday,
+  generateRandomMatch,
+  recalculateStats,
+  setMatchResult,
+  validateMatchConsistency
+} from "./league";
 
-describe("league logic", () => {
-  it("starts with an empty table", () => {
+describe("matchday flow", () => {
+  it("captures a single match manually", () => {
     const state = createInitialState();
-    const table = buildTable(state.clubs, state.matches);
+    const nextState = setMatchResult(state, "md1-1", 2, 1);
+    const match = nextState.matches.find((item) => item.id === "md1-1");
 
-    expect(table).toHaveLength(state.clubs.length);
-    expect(table.every((row) => row.points === 0)).toBe(true);
+    expect(match?.homeGoals).toBe(2);
+    expect(match?.awayGoals).toBe(1);
+    expect(match?.status).toBe("vorbereitet");
+    expect(match?.details?.goals).toHaveLength(3);
   });
 
-  it("simulates one complete matchday", () => {
-    const state = { ...createInitialState(), selectedClubId: "dortmund" };
-    const nextState = simulateMatchday(state);
+  it("generates a random single match result", () => {
+    const state = createInitialState();
+    const nextState = generateRandomMatch(state, "md1-2");
+    const match = nextState.matches.find((item) => item.id === "md1-2");
 
-    expect(nextState.currentMatchday).toBe(2);
-    expect(nextState.matches.filter((match) => match.played)).toHaveLength(3);
-    expect(buildTable(nextState.clubs, nextState.matches).some((row) => row.played > 0)).toBe(true);
+    expect(match?.homeGoals).toBeGreaterThanOrEqual(0);
+    expect(match?.awayGoals).toBeGreaterThanOrEqual(0);
+    expect(match?.details).toBeDefined();
+  });
+
+  it("generates a consistent match scheme", () => {
+    const state = setMatchResult(createInitialState(), "md1-3", 3, 2);
+    const match = state.matches.find((item) => item.id === "md1-3");
+
+    expect(match).toBeDefined();
+    expect(validateMatchConsistency(match!)).toEqual([]);
+    expect(match?.details?.goals.filter((goal) => goal.team === "home")).toHaveLength(3);
+    expect(match?.details?.goals.filter((goal) => goal.team === "away")).toHaveLength(2);
+  });
+
+  it("blocks matchday completion until all results exist", () => {
+    const partial = setMatchResult(createInitialState(), "md1-1", 1, 0);
+
+    expect(canCompleteCurrentMatchday(partial)).toBe(false);
+    expect(completeCurrentMatchday(partial).currentMatchday).toBe(1);
+  });
+
+  it("updates table and player statistics when the matchday is completed", () => {
+    const state = ["md1-1", "md1-2", "md1-3"].reduce(
+      (current, matchId) => setMatchResult(current, matchId, 2, 1),
+      createInitialState()
+    );
+
+    const completed = completeCurrentMatchday(state);
+
+    expect(completed.currentMatchday).toBe(2);
+    expect(completed.table.reduce((sum, row) => sum + row.played, 0)).toBe(6);
+    expect(completed.playerStats.some((stat) => stat.goals > 0)).toBe(true);
+    expect(completed.playerStats.some((stat) => stat.assists > 0)).toBe(true);
+  });
+
+  it("recalculates completed match statistics after a later result change", () => {
+    const state = ["md1-1", "md1-2", "md1-3"].reduce(
+      (current, matchId) => setMatchResult(current, matchId, 1, 0),
+      createInitialState()
+    );
+    const completed = completeCurrentMatchday(state);
+    const recalculated = recalculateStats(setMatchResult(completed, "md1-1", 0, 4));
+    const hamburg = recalculated.table.find((row) => row.clubId === "hamburg");
+
+    expect(hamburg?.goalsFor).toBe(4);
   });
 });

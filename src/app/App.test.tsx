@@ -11,7 +11,7 @@ describe("App", () => {
     await db.open();
   });
 
-  it("lets the user pick a club and open the dashboard", async () => {
+  it("lets the user pick a club and edit a single match", async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter initialEntries={["/clubs"]}>
@@ -23,7 +23,13 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: /Borussia Dortmund/i }));
 
-    expect(await screen.findByRole("heading", { name: "Borussia Dortmund" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Spieltag simulieren" })).toBeEnabled();
+    expect(await screen.findByRole("heading", { name: "Spieltag 1" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Spiel bearbeiten" })).toHaveLength(3);
+
+    await user.click(screen.getAllByRole("link", { name: "Spiel bearbeiten" })[0]);
+    expect(await screen.findByRole("heading", { name: /FC Muenchen/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Zufallsergebnis" }));
+    expect(await screen.findByText("Spielschema ist logisch konsistent.")).toBeInTheDocument();
   });
 });
