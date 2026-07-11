@@ -5,8 +5,15 @@ import type { GameState } from "../domain/types";
 
 const GAME_ID = "current";
 
+// Bump whenever the shape of GameState/Club/Player/Match changes.
+// Persisted records from an older version are discarded on load instead of
+// being merged in, since a partial/legacy shape leads to broken rendering
+// (e.g. missing Player.firstName or Club.league).
+const SCHEMA_VERSION = 2;
+
 type PersistedGame = GameState & {
   id: string;
+  schemaVersion: number;
 };
 
 class BuliDatabase extends Dexie {
@@ -50,16 +57,17 @@ export const createInitialState = (): GameState => ({
 export const loadGameState = async (): Promise<GameState> => {
   const saved = await db.games.get(GAME_ID);
 
-  if (!saved) {
+  if (!saved || saved.schemaVersion !== SCHEMA_VERSION) {
+    if (saved) await db.games.delete(GAME_ID);
     return createInitialState();
   }
 
-  const { id: _id, ...state } = saved;
+  const { id: _id, schemaVersion: _schemaVersion, ...state } = saved;
   return state;
 };
 
 export const saveGameState = async (state: GameState) => {
-  await db.games.put({ ...state, id: GAME_ID, updatedAt: new Date().toISOString() });
+  await db.games.put({ ...state, id: GAME_ID, schemaVersion: SCHEMA_VERSION, updatedAt: new Date().toISOString() });
 };
 
 export const resetGameState = async () => {

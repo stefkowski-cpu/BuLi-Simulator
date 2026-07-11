@@ -284,6 +284,19 @@ nav a {
   text-align: right;
 }
 
+.matchday-nav {
+  align-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.matchday-nav button {
+  background: #e7dfd2;
+  color: #152018;
+}
+
 .match-list {
   display: grid;
   gap: 1rem;

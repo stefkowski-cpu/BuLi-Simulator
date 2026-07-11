@@ -5,8 +5,12 @@ import {
   canCompleteCurrentMatchday,
   completeCurrentMatchday,
   currentMatchdayMatches,
+  findPlayerName,
+  formatPlayerName,
   generateRandomMatch,
   hasResult,
+  matchesForMatchday,
+  matchdaysList,
   playersForClub,
   recalculateStats,
   setMatchResult,
@@ -25,11 +29,6 @@ const leagueLabels: Record<LeagueId, string> = {
 };
 
 const clubName = (clubs: Club[], id: string) => clubs.find((club) => club.id === id)?.name ?? id;
-const fullPlayerName = (player: Player) => `${player.firstName} ${player.name}`;
-const playerName = (players: Player[], id: string) => {
-  const player = players.find((item) => item.id === id);
-  return player ? fullPlayerName(player) : id;
-};
 const resultLabel = (match: Match) => (hasResult(match) ? `${match.homeGoals}:${match.awayGoals}` : "-:-");
 
 const flagEmoji = (isoCode: string) => {
@@ -88,7 +87,7 @@ function Dashboard({ state }: { state: GameState }) {
   const entries = [
     { to: "/tables/bundesliga", label: "Tabelle 1. Bundesliga", value: `${state.clubs.filter((club) => club.league === "bundesliga").length} Vereine` },
     { to: "/tables/zweite", label: "Tabelle 2. Bundesliga", value: `${state.clubs.filter((club) => club.league === "zweite").length} Vereine` },
-    { to: "/matchdays", label: "Aktueller Spieltag", value: `Spieltag ${state.currentMatchday}` },
+    { to: `/matchdays/${state.currentMatchday}`, label: "Aktueller Spieltag", value: `Spieltag ${state.currentMatchday}` },
     { to: "/clubs", label: "Vereine", value: `${state.clubs.length} Clubs` },
     { to: "/players", label: "Spieler", value: `${state.players.length} Profis` },
     { to: "/stats/scorers", label: "Torschuetzenliste", value: `${state.playerStats.filter((stat) => stat.goals > 0).length} Torschuetzen` },
@@ -130,30 +129,76 @@ function MatchdaysPage({
   onReset: () => void;
   onSimulateOpen: () => void;
 }) {
-  const matches = currentMatchdayMatches(state);
+  const { matchday } = useParams();
+  const navigate = useNavigate();
+  const matchdayNumber = Number(matchday);
+  const available = matchdaysList(state);
+
+  if (!Number.isInteger(matchdayNumber) || matchdayNumber < 1) {
+    return <Navigate to={`/matchdays/${state.currentMatchday}`} replace />;
+  }
+
+  const matches = matchesForMatchday(state, matchdayNumber);
+  const isCurrent = matchdayNumber === state.currentMatchday;
+  const prevMatchday = [...available].reverse().find((day) => day < matchdayNumber) ?? null;
+  const nextMatchday = available.find((day) => day > matchdayNumber) ?? null;
 
   return (
     <main className="page">
       <section className="dashboard-head">
         <div>
-          <p className="eyebrow">Aktueller Spieltag</p>
-          <h1>Spieltag {state.currentMatchday}</h1>
-          <p>{state.lastMessage}</p>
+          <p className="eyebrow">{isCurrent ? "Aktueller Spieltag" : "Spieltagsansicht"}</p>
+          <h1>Spieltag {matchdayNumber}</h1>
+          <p>{isCurrent ? state.lastMessage : "Nur der aktuelle Spieltag kann abgeschlossen werden."}</p>
         </div>
-        <div className="actions">
-          <DiceButton title="Alle offenen Spiele dieses Spieltags simulieren" onClick={onSimulateOpen}>
-            Alle Spiele simulieren
-          </DiceButton>
-          <Link className={`button-link ${canCompleteCurrentMatchday(state) ? "" : "disabled-link"}`} to="/review">
-            Kontrolluebersicht
-          </Link>
-          <button className="secondary" onClick={onReset}>
-            Neu starten
-          </button>
-        </div>
+        {isCurrent ? (
+          <div className="actions">
+            <DiceButton title="Alle offenen Spiele dieses Spieltags simulieren" onClick={onSimulateOpen}>
+              Alle Spiele simulieren
+            </DiceButton>
+            <Link className={`button-link ${canCompleteCurrentMatchday(state) ? "" : "disabled-link"}`} to="/review">
+              Kontrolluebersicht
+            </Link>
+            <button className="secondary" onClick={onReset}>
+              Neu starten
+            </button>
+          </div>
+        ) : null}
       </section>
 
-      <section className="match-list" aria-label="Partien des aktuellen Spieltags">
+      <nav className="matchday-nav" aria-label="Spieltagsnavigation">
+        <button
+          type="button"
+          onClick={() => prevMatchday && navigate(`/matchdays/${prevMatchday}`)}
+          disabled={prevMatchday === null}
+        >
+          Vorheriger Spieltag
+        </button>
+        <label>
+          Spieltag waehlen
+          <select
+            value={available.includes(matchdayNumber) ? matchdayNumber : ""}
+            onChange={(event) => navigate(`/matchdays/${event.target.value}`)}
+          >
+            {!available.includes(matchdayNumber) && <option value="">Spieltag {matchdayNumber}</option>}
+            {available.map((day) => (
+              <option key={day} value={day}>
+                Spieltag {day}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          type="button"
+          onClick={() => nextMatchday && navigate(`/matchdays/${nextMatchday}`)}
+          disabled={nextMatchday === null}
+        >
+          Naechster Spieltag
+        </button>
+      </nav>
+
+      <section className="match-list" aria-label={`Partien des Spieltags ${matchdayNumber}`}>
+        {matches.length === 0 && <p>Fuer diesen Spieltag liegen noch keine Partien vor.</p>}
         {matches.map((match) => (
           <article className="match-card" key={match.id}>
             <div>
@@ -325,7 +370,7 @@ function ClubDetailPage({ state }: { state: GameState }) {
             <tbody>
               {squad.map((player) => (
                 <tr key={player.id}>
-                  <td><Link to={`/players/${player.id}`}>{fullPlayerName(player)}</Link></td>
+                  <td><Link to={`/players/${player.id}`}>{formatPlayerName(player)}</Link></td>
                   <td><FlagList nationalities={player.nationalities} /></td>
                   <td>{player.position}</td>
                   <td>{player.rating}</td>
@@ -382,7 +427,7 @@ function PlayersPage({ state }: { state: GameState }) {
                 const stat = state.playerStats.find((item) => item.playerId === player.id);
                 return (
                   <tr key={player.id}>
-                    <td><Link to={`/players/${player.id}`}>{fullPlayerName(player)}</Link></td>
+                    <td><Link to={`/players/${player.id}`}>{formatPlayerName(player)}</Link></td>
                     <td><FlagList nationalities={player.nationalities} /></td>
                     <td>{player.age}</td>
                     <td><Link to={`/clubs/${player.clubId}`}>{clubName(state.clubs, player.clubId)}</Link></td>
@@ -418,7 +463,7 @@ function PlayerDetailPage({ state }: { state: GameState }) {
       <section className="dashboard-head compact-head">
         <div>
           <p className="eyebrow">{club ? leagueLabels[club.league] : "Spieler"}</p>
-          <h1>{fullPlayerName(player)}</h1>
+          <h1>{formatPlayerName(player)}</h1>
           <p><FlagList nationalities={player.nationalities} /> · {club?.name} · Rueckennummer {player.shirtNumber}</p>
         </div>
       </section>
@@ -466,7 +511,7 @@ function StatsPage({ state, kind }: { state: GameState; kind: "scorers" | "form"
         <div className="table-wrap">
           <table>
             <thead><tr><th>Spieler</th><th>Verein</th><th>Tore</th><th>Assists</th><th>Sperren</th><th>Note</th></tr></thead>
-            <tbody>{rows.slice(0, 30).map((stat) => <tr key={stat.playerId}><td><Link to={`/players/${stat.playerId}`}>{playerName(state.players, stat.playerId)}</Link></td><td>{clubName(state.clubs, stat.clubId)}</td><td>{stat.goals}</td><td>{stat.assists}</td><td>{stat.suspensions}</td><td>{stat.averageRating || "-"}</td></tr>)}</tbody>
+            <tbody>{rows.slice(0, 30).map((stat) => <tr key={stat.playerId}><td><Link to={`/players/${stat.playerId}`}>{findPlayerName(state.players, stat.playerId)}</Link></td><td>{clubName(state.clubs, stat.clubId)}</td><td>{stat.goals}</td><td>{stat.assists}</td><td>{stat.suspensions}</td><td>{stat.averageRating || "-"}</td></tr>)}</tbody>
           </table>
         </div>
       </section>
@@ -495,7 +540,7 @@ function MatchDetail({
     setAwayGoals(match?.awayGoals ?? 0);
   }, [match?.homeGoals, match?.awayGoals]);
 
-  if (!match) return <Navigate to="/matchdays" replace />;
+  if (!match) return <Navigate to={`/matchdays/${state.currentMatchday}`} replace />;
 
   const homePlayers = playersForClub(state.players, match.homeId);
   const awayPlayers = playersForClub(state.players, match.awayId);
@@ -508,7 +553,7 @@ function MatchDetail({
     <main className="page">
       <section className="dashboard-head compact-head">
         <div><p className="eyebrow">Spiel bearbeiten</p><h1>{clubName(state.clubs, match.homeId)} {resultLabel(match)} {clubName(state.clubs, match.awayId)}</h1><p>Status: {match.status}</p></div>
-        <Link className="button-link secondary-link" to="/matchdays">Zurueck</Link>
+        <Link className="button-link secondary-link" to={`/matchdays/${match.matchday}`}>Zurueck</Link>
       </section>
       <section className="panel result-editor">
         <h2>Ergebnis</h2>
@@ -538,7 +583,7 @@ function MatchDetail({
           <section className="panel"><h2>Karten und Noten</h2><div className="edit-grid">{match.details.cards.map((card) => {
             const sidePlayers = card.team === "home" ? homePlayers : awayPlayers;
             return <div className="edit-card" key={card.id}><label>Minute<input type="number" min="1" max="90" value={card.minute} onChange={(event) => updateCard(card.id, { minute: Number(event.target.value) })} /></label><PlayerPicker label="Spieler" value={card.playerId} players={sidePlayers} onChange={(value) => updateCard(card.id, { playerId: value })} /><label>Karte<select value={card.type} onChange={(event) => updateCard(card.id, { type: event.target.value as "gelb" | "gelb-rot" | "rot" })}><option value="gelb">Gelb</option><option value="gelb-rot">Gelb-Rot</option><option value="rot">Rot</option></select></label></div>;
-          })}</div><div className="ratings-grid">{[...match.details.homeLineup, ...match.details.awayLineup].map((playerId) => <label key={playerId}>{playerName(state.players, playerId)}<input type="number" step="0.1" min="1" max="6" value={match.details?.ratings[playerId] ?? 3.5} onChange={(event) => match.details && onDetailsChange(match.id, { ...match.details, ratings: { ...match.details.ratings, [playerId]: Number(event.target.value) } })} /></label>)}</div></section>
+          })}</div><div className="ratings-grid">{[...match.details.homeLineup, ...match.details.awayLineup].map((playerId) => <label key={playerId}>{findPlayerName(state.players, playerId)}<input type="number" step="0.1" min="1" max="6" value={match.details?.ratings[playerId] ?? 3.5} onChange={(event) => match.details && onDetailsChange(match.id, { ...match.details, ratings: { ...match.details.ratings, [playerId]: Number(event.target.value) } })} /></label>)}</div></section>
           <section className={`panel ${errors.length ? "warning-panel" : "ok-panel"}`}><h2>Konsistenz</h2>{errors.length ? <ul>{errors.map((error) => <li key={error}>{error}</li>)}</ul> : <p>Spielschema ist logisch konsistent.</p>}</section>
         </>
       ) : <section className="panel"><h2>Noch kein Spielschema</h2><p>Speichere ein Ergebnis oder erzeuge ein Zufallsergebnis.</p></section>}
@@ -547,11 +592,11 @@ function MatchDetail({
 }
 
 function PlayerPicker({ label, value, players, onChange }: { label: string; value: string; players: Player[]; onChange: (value: string) => void }) {
-  return <label>{label}<select value={value} onChange={(event) => onChange(event.target.value)}>{players.map((player) => <option key={player.id} value={player.id}>{fullPlayerName(player)}</option>)}</select></label>;
+  return <label>{label}<select value={value} onChange={(event) => onChange(event.target.value)}>{players.map((player) => <option key={player.id} value={player.id}>{formatPlayerName(player)}</option>)}</select></label>;
 }
 
 function TeamSheet({ title, playerIds, players }: { title: string; playerIds: string[]; players: Player[] }) {
-  return <article className="panel"><h2>{title}</h2><ol className="player-list">{playerIds.map((playerId) => <li key={playerId}>{playerName(players, playerId)}</li>)}</ol></article>;
+  return <article className="panel"><h2>{title}</h2><ol className="player-list">{playerIds.map((playerId) => <li key={playerId}>{findPlayerName(players, playerId)}</li>)}</ol></article>;
 }
 
 function Review({ state, onComplete }: { state: GameState; onComplete: () => void }) {
@@ -566,8 +611,7 @@ export function App() {
 
   useEffect(() => {
     void loadGameState().then((savedState) => {
-      const initial = createInitialState();
-      setState(recalculateStats({ ...initial, ...savedState, players: savedState.players ?? initial.players }));
+      setState(recalculateStats(savedState));
       setIsLoading(false);
     });
   }, []);
@@ -615,7 +659,8 @@ export function App() {
       </header>
       <Routes>
         <Route path="/" element={<Dashboard state={state} />} />
-        <Route path="/matchdays" element={<MatchdaysPage state={state} onComplete={complete} onReset={reset} onSimulateOpen={simulateOpen} />} />
+        <Route path="/matchdays" element={<Navigate to={`/matchdays/${state.currentMatchday}`} replace />} />
+        <Route path="/matchdays/:matchday" element={<MatchdaysPage state={state} onComplete={complete} onReset={reset} onSimulateOpen={simulateOpen} />} />
         <Route path="/tables/:leagueId" element={<LeagueTablePage state={state} />} />
         <Route path="/clubs" element={<ClubsPage state={state} />} />
         <Route path="/clubs/:clubId" element={<ClubDetailPage state={state} />} />

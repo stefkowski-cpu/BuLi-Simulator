@@ -3,7 +3,11 @@ import { createInitialState } from "../db/gameDb";
 import {
   canCompleteCurrentMatchday,
   completeCurrentMatchday,
+  findPlayerName,
+  formatPlayerName,
   generateRandomMatch,
+  matchdaysList,
+  matchesForMatchday,
   recalculateStats,
   setMatchResult,
   simulateOpenMatchesForCurrentMatchday,
@@ -84,5 +88,49 @@ describe("matchday flow", () => {
     const hamburg = recalculated.table.find((row) => row.clubId === "hamburg");
 
     expect(hamburg?.goalsFor).toBe(4);
+  });
+});
+
+describe("formatPlayerName", () => {
+  it("joins first and last name for a complete player", () => {
+    expect(formatPlayerName({ firstName: "Jonas", name: "Berg" })).toBe("Jonas Berg");
+  });
+
+  it("falls back to the last name when the first name is missing", () => {
+    expect(formatPlayerName({ firstName: undefined as unknown as string, name: "Berg" })).toBe("Berg");
+    expect(formatPlayerName({ firstName: "", name: "Berg" })).toBe("Berg");
+  });
+
+  it("falls back to a placeholder when both names are missing", () => {
+    expect(formatPlayerName({ firstName: "", name: "" })).toBe("Unbekannter Spieler");
+    expect(formatPlayerName(undefined)).toBe("Unbekannter Spieler");
+  });
+
+  it("finds a player by id via findPlayerName and falls back for unknown ids", () => {
+    const state = createInitialState();
+    const player = state.players[0];
+
+    expect(findPlayerName(state.players, player.id)).toBe(formatPlayerName(player));
+    expect(findPlayerName(state.players, "does-not-exist")).toBe("Unbekannter Spieler");
+  });
+});
+
+describe("matchday listing", () => {
+  it("lists all matchdays present in the fixtures, sorted ascending", () => {
+    const state = createInitialState();
+    expect(matchdaysList(state)).toEqual([1, 2, 3]);
+  });
+
+  it("returns only the matches for the requested matchday", () => {
+    const state = createInitialState();
+    const matchday2 = matchesForMatchday(state, 2);
+
+    expect(matchday2.length).toBeGreaterThan(0);
+    expect(matchday2.every((match) => match.matchday === 2)).toBe(true);
+  });
+
+  it("returns an empty list for a matchday with no fixtures", () => {
+    const state = createInitialState();
+    expect(matchesForMatchday(state, 99)).toEqual([]);
   });
 });

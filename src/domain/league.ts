@@ -55,10 +55,31 @@ export const hasResult = (match: Match) => match.homeGoals !== undefined && matc
 export const currentMatchdayMatches = (state: GameState) =>
   state.matches.filter((match) => match.matchday === state.currentMatchday);
 
+export const matchesForMatchday = (state: GameState, matchday: number) =>
+  state.matches.filter((match) => match.matchday === matchday);
+
+export const matchdaysList = (state: GameState): number[] =>
+  Array.from(new Set(state.matches.map((match) => match.matchday))).sort((a, b) => a - b);
+
 export const canCompleteCurrentMatchday = (state: GameState) =>
   currentMatchdayMatches(state).length > 0 && currentMatchdayMatches(state).every(hasResult);
 
 export const playersForClub = (players: Player[], clubId: string) => players.filter((player) => player.clubId === clubId);
+
+const UNKNOWN_PLAYER_NAME = "Unbekannter Spieler";
+
+// Central place to render a player's display name. Missing/blank first or
+// last names are dropped instead of producing "undefined ..." strings.
+export const formatPlayerName = (player: Pick<Player, "firstName" | "name"> | undefined | null): string => {
+  if (!player) return UNKNOWN_PLAYER_NAME;
+  const first = player.firstName?.trim();
+  const last = player.name?.trim();
+  if (first && last) return `${first} ${last}`;
+  return first || last || UNKNOWN_PLAYER_NAME;
+};
+
+export const findPlayerName = (players: Player[], playerId: string): string =>
+  formatPlayerName(players.find((player) => player.id === playerId));
 
 const seedFor = (text: string) => text.split("").reduce((sum, char) => sum + char.charCodeAt(0), 17);
 

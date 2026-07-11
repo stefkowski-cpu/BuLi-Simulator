@@ -61,4 +61,83 @@ describe("App", () => {
     expect(screen.getByRole("navigation", { name: "Hauptnavigation" })).toHaveTextContent("Spieltage");
     expect(screen.getByRole("navigation", { name: "Hauptnavigation" })).toHaveTextContent("Statistiken");
   });
+
+  it("opens a specific matchday directly and keeps it selected on reload", async () => {
+    const first = render(
+      <MemoryRouter initialEntries={["/matchdays/2"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("heading", { name: "Spieltag 2" })).toBeInTheDocument();
+    first.unmount();
+
+    // Simulating a browser reload: a fresh mount straight at the same deep link.
+    render(
+      <MemoryRouter initialEntries={["/matchdays/2"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(await screen.findByRole("heading", { name: "Spieltag 2" })).toBeInTheDocument();
+  });
+
+  it("navigates forward and backward between matchdays", async () => {
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter initialEntries={["/matchdays/2"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("heading", { name: "Spieltag 2" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Naechster Spieltag" }));
+    expect(await screen.findByRole("heading", { name: "Spieltag 3" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Vorheriger Spieltag" }));
+    expect(await screen.findByRole("heading", { name: "Spieltag 2" })).toBeInTheDocument();
+  });
+
+  it("redirects bare /matchdays to the current matchday", async () => {
+    render(
+      <MemoryRouter initialEntries={["/matchdays"]}>
+        <App />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole("heading", { name: "Spieltag 1" })).toBeInTheDocument();
+  });
+
+  it("redirects gracefully for missing or invalid ids instead of crashing", async () => {
+    const { unmount } = render(
+      <MemoryRouter initialEntries={["/clubs/does-not-exist"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(await screen.findByRole("heading", { name: "Alle Vereine" })).toBeInTheDocument();
+    unmount();
+
+    const playerRender = render(
+      <MemoryRouter initialEntries={["/players/does-not-exist"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(await screen.findByRole("heading", { name: "Alle Spieler" })).toBeInTheDocument();
+    playerRender.unmount();
+
+    const matchdayRender = render(
+      <MemoryRouter initialEntries={["/matchdays/not-a-number"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(await screen.findByRole("heading", { name: "Spieltag 1" })).toBeInTheDocument();
+    matchdayRender.unmount();
+
+    render(
+      <MemoryRouter initialEntries={["/matches/does-not-exist"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(await screen.findByRole("heading", { name: "Spieltag 1" })).toBeInTheDocument();
+  });
 });
