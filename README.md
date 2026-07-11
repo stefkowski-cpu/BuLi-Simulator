@@ -19,7 +19,7 @@ npm run build
 
 ## GitHub Pages
 
-Der Workflow `.github/workflows/pages.yml` baut die App und deployed `dist/` nach GitHub Pages. In GitHub muss unter **Settings > Pages** als Source **GitHub Actions** aktiviert werden.
+Der Workflow `.github/workflows/pages.yml` prueft die App, baut `dist/` und veroeffentlicht den Build auf dem Branch `gh-pages`. In GitHub muss unter **Settings > Pages** als Source **Deploy from a branch** mit Branch `gh-pages` und Ordner `/ (root)` aktiviert werden.
 
 ## Aktueller Umfang
 
