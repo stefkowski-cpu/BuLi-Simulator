@@ -44,6 +44,13 @@ button {
   text-decoration: none;
 }
 
+.dice-button {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.5rem;
+  min-height: 44px;
+}
+
 .secondary-link,
 .disabled-link {
   background: #e7dfd2;
@@ -84,7 +91,8 @@ button:disabled {
 
 nav {
   display: flex;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
 }
 
 nav a {
@@ -103,6 +111,43 @@ nav a {
   min-height: 60vh;
   align-content: center;
   font-weight: 800;
+}
+
+.page-head {
+  margin-bottom: 1rem;
+}
+
+.page-head h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  margin: 0.15rem 0 0.5rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.dashboard-tile {
+  background: #ffffff;
+  border: 1px solid #ded7ca;
+  border-radius: 8px;
+  color: #152018;
+  display: grid;
+  gap: 0.8rem;
+  min-height: 128px;
+  padding: 1rem;
+  text-decoration: none;
+}
+
+.dashboard-tile span {
+  color: #526056;
+  font-weight: 800;
+}
+
+.dashboard-tile strong {
+  color: #0f5c3b;
+  font-size: 1.35rem;
 }
 
 .hero,
@@ -166,6 +211,11 @@ nav a {
 
 .club-card:hover {
   transform: translateY(-2px);
+}
+
+.link-card {
+  color: #152018;
+  text-decoration: none;
 }
 
 .club-badge {
@@ -308,6 +358,35 @@ select {
   gap: 1rem;
 }
 
+.filters {
+  align-items: end;
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin-bottom: 1rem;
+}
+
+.flags {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.flag {
+  display: inline-flex;
+  font-size: 1.25rem;
+  line-height: 1;
+  min-height: 24px;
+  min-width: 24px;
+}
+
+.zone-title {
+  box-shadow: inset 4px 0 0 #0f5c3b;
+}
+
+.zone-danger {
+  box-shadow: inset 4px 0 0 #b45028;
+}
+
 .edit-grid,
 .ratings-grid {
   display: grid;
@@ -374,6 +453,12 @@ th {
 
   .split {
     grid-template-columns: 1fr;
+  }
+
+  nav a {
+    background: #f3eee5;
+    border-radius: 8px;
+    padding: 0.55rem 0.7rem;
   }
 
   .actions {

@@ -3,8 +3,12 @@ export type Club = {
   name: string;
   shortName: string;
   city: string;
+  league: "bundesliga" | "zweite";
   strength: number;
   budget: number;
+  trainer: string;
+  manager: string;
+  squadMarketValue: number;
   morale: number;
   fanMood: number;
   colors: {
@@ -18,9 +22,27 @@ export type PlayerPosition = "TW" | "ABW" | "MIT" | "ST";
 export type Player = {
   id: string;
   clubId: string;
+  firstName: string;
   name: string;
+  birthDate: string;
+  age: number;
+  nationalities: Nationality[];
   position: PlayerPosition;
+  secondaryPositions: PlayerPosition[];
+  shirtNumber: number;
   rating: number;
+  form: number;
+  fitness: number;
+  morale: number;
+  marketValue: number;
+  contractUntil: string;
+  previousClubs: string[];
+  nationalTeamCaps: number;
+};
+
+export type Nationality = {
+  isoCode: string;
+  countryName: string;
 };
 
 export type MatchStatus = "offen" | "vorbereitet" | "abgeschlossen";

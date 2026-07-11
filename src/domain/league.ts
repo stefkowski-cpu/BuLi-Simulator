@@ -226,6 +226,11 @@ export const generateRandomMatch = (state: GameState, matchId: string): GameStat
   return setMatchResult(state, matchId, result.homeGoals, result.awayGoals);
 };
 
+export const simulateOpenMatchesForCurrentMatchday = (state: GameState): GameState =>
+  currentMatchdayMatches(state)
+    .filter((match) => match.status === "offen")
+    .reduce((currentState, match) => generateRandomMatch(currentState, match.id), state);
+
 export const updateMatchDetails = (state: GameState, matchId: string, details: MatchDetails): GameState => {
   const matches = state.matches.map((match) => (match.id === matchId ? { ...match, details } : match));
   return recalculateStats({ ...state, matches, updatedAt: new Date().toISOString() });

@@ -26,7 +26,14 @@ Der Workflow `.github/workflows/pages.yml` prueft die App, baut `dist/` und vero
 - Verein aus Demo-Daten auswaehlen.
 - Spieltagsuebersicht mit allen Partien des aktuellen Spieltags.
 - Jede Partie einzeln bearbeiten, manuell erfassen oder per Zufallsergebnis vorbereiten.
+- Dashboard als Liga-Zentrale mit Einstiegen zu Spieltagen, Tabellen, Vereinen, Spielern, Statistiken, Transfers, Nationalmannschaften und Historie.
+- Eigene Tabellenansichten fuer 1. Bundesliga und 2. Bundesliga.
+- Vereinsuebersicht und Vereinsdetailseiten mit Kader, Trainer, Manager, Form, Budget und Saisonspielen.
+- Ligauebergreifende, filter- und sortierbare Spielerliste mit Flaggen fuer Nationalitaeten.
+- Spielerdetailseiten mit Vertrags-, Marktwert-, Form-, Fitness-, Karten- und Leistungsdaten.
 - Detailseite je Spiel mit Aufstellungen, Ersatzbank, Wechseln, Toren, Vorlagen, Karten, Minuten und Noten.
+- Einheitliche Wuerfel-Buttons fuer Zufallsfunktionen.
+- Funktion zum Simulieren aller offenen Spiele eines Spieltags ohne Ueberschreiben vorbereiteter Spiele.
 - Kontrolluebersicht vor dem Spieltagsabschluss.
 - Tabelle, Vereinsstatistiken und Spielerstatistiken aus abgeschlossenen Spielen neu berechnen.
 - Lokale Speicherung per IndexedDB, PWA-Manifest und Service Worker.

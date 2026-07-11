@@ -6,6 +6,7 @@ import {
   generateRandomMatch,
   recalculateStats,
   setMatchResult,
+  simulateOpenMatchesForCurrentMatchday,
   validateMatchConsistency
 } from "./league";
 
@@ -29,6 +30,17 @@ describe("matchday flow", () => {
     expect(match?.homeGoals).toBeGreaterThanOrEqual(0);
     expect(match?.awayGoals).toBeGreaterThanOrEqual(0);
     expect(match?.details).toBeDefined();
+  });
+
+  it("simulates all open matches without overwriting prepared matches", () => {
+    const prepared = setMatchResult(createInitialState(), "md1-1", 5, 0);
+    const simulated = simulateOpenMatchesForCurrentMatchday(prepared);
+    const protectedMatch = simulated.matches.find((item) => item.id === "md1-1");
+    const matchday = simulated.matches.filter((item) => item.matchday === 1);
+
+    expect(protectedMatch?.homeGoals).toBe(5);
+    expect(protectedMatch?.awayGoals).toBe(0);
+    expect(matchday.every((match) => match.status === "vorbereitet")).toBe(true);
   });
 
   it("generates a consistent match scheme", () => {
